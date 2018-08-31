@@ -1,15 +1,32 @@
+from __future__ import print_function
+from random import choice
+
+# my_input = " \
+# 	3, 0, 6,    5, 0, 8,    4, 0, 0, \
+# 	5, 2, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 8, 7,    0, 0, 0,    0, 3, 1, \
+# 									 \
+# 	0, 0, 3,    0, 1, 0,    0, 8, 0, \
+# 	9, 0, 0,    8, 6, 3,    0, 0, 5, \
+# 	0, 5, 0,    0, 9, 0,    6, 0, 0, \
+# 									 \
+# 	1, 3, 0,    0, 0, 0,    2, 5, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 7, 4, \
+# 	0, 0, 5,    2, 0, 6,    3, 0, 0  \
+# "
+
 my_input = " \
-	3, 0, 6,    5, 0, 8,    4, 0, 0, \
-	5, 2, 0,    0, 0, 0,    0, 0, 0, \
-	0, 8, 7,    0, 0, 0,    0, 3, 1, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
 									 \
-	0, 0, 3,    0, 1, 0,    0, 8, 0, \
-	9, 0, 0,    8, 6, 3,    0, 0, 5, \
-	0, 5, 0,    0, 9, 0,    6, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
 									 \
-	1, 3, 0,    0, 0, 0,    2, 5, 0, \
-	0, 0, 0,    0, 0, 0,    0, 7, 4, \
-	0, 0, 5,    2, 0, 6,    3, 0, 0  \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+	0, 0, 0,    0, 0, 0,    0, 0, 0  \
 "
 
 # my_input = " \
@@ -34,26 +51,66 @@ box_map = {
 
 def main():
 	sudoku_grid = GetMyInput(my_input)
-	res = IsValid(sudoku_grid)
-	#res = test(sudoku_grid, 0)
+	res = Backtrack(sudoku_grid, 0)
 	if(res):
-		print("has solution")
+		PrintSudokuGrid(sudoku_grid)
 	else:
 		print("no solution")
 
 
+def PrintSudokuGrid(sudoku_grid):
+	# I will document this later it makes me want to cry right now.
+	for i in range(9):
+		print("++++", end="")
+	print("+")
+	for i in range(9):
+		print("+", end="")
+		for j in range(9):
+			print(" " + str(sudoku_grid[(i * 9) + j]) + " ", end="")
+			if(j % 3 == 2):
+				print("+", end="")
+			else:
+				print("|", end="")
+		print()
+		if(i % 3 == 2):
+			for j in range(9):
+				print("++++", end="")
+			print("+")
+		else:
+			for j in range(9):
+				if(j % 3 == 0):
+					print("+", end="")
+				else:
+					print("-", end="")
+				print("---", end="")
+			if(i % 3 == 0):
+				print("+")
+			else:
+				print("-")
 
-def test(sudoku_grid, starting):
+
+def Backtrack(sudoku_grid, starting):
 	if(IsValid(sudoku_grid)):
 		return True
+	if(starting >= len(sudoku_grid)):
+		return False
 	for i in range(starting, len(sudoku_grid)):
 		if(sudoku_grid[i] == 0):
 			possible_inputs = GetPossibleInputsForPos(sudoku_grid, i)
 			if(len(possible_inputs) != 0):
-				for j in possible_inputs:
-					sudoku_grid[i] = j
-					return test(sudoku_grid, i + 1)
-				sudoku_grid[i] = 0
+				for j in range(len(possible_inputs)):
+					num = choice(possible_inputs)
+					sudoku_grid[i] = num
+					res = Backtrack(sudoku_grid, i + 1)
+					if(res):
+						# We've found a correct sequence of numbers, return it!
+						return True
+					possible_inputs.remove(num)
+			# We get to here if there were no possible inputs
+			# or if none of the possible inputs we tried produced
+			# a valid sequence of numbers to return True
+			sudoku_grid[i] = 0
+			return False
 
 
 def IsValid(sudoku_grid):
@@ -64,7 +121,7 @@ def AllRowsValid(sudoku_grid):
 	for i in range(0, len(sudoku_grid), 9):
 		nums = []
 		for j in range(i, i + 9):
-			if(sudoku_grid[j] in nums):
+			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
 				return False
 			else:
 				nums.append(sudoku_grid[j])
@@ -76,7 +133,7 @@ def AllColumnsValid(sudoku_grid):
 	for i in range(9):
 		nums = []
 		for j in range(i, len(sudoku_grid), 9):
-			if(sudoku_grid[j] in nums):
+			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
 				return False
 			else:
 				nums.append(sudoku_grid[j])
@@ -94,7 +151,7 @@ def AllBoxesValid(sudoku_grid):
 
 		for r in range(y * 3, (y + 1) * 3):
 			for c in range(x * 3, (x + 1) * 3):
-				if(sudoku_grid[(9 * r) + c] in nums):
+				if(sudoku_grid[(9 * r) + c] == 0 or sudoku_grid[(9 * r) + c] in nums):
 					return False
 				else:
 					nums.append(sudoku_grid[(9 * r) + c])
