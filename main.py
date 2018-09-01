@@ -83,10 +83,7 @@ def PrintSudokuGrid(sudoku_grid):
 				else:
 					print("-", end="")
 				print("---", end="")
-			if(i % 3 == 0):
-				print("+")
-			else:
-				print("-")
+			print("+")
 
 
 def Backtrack(sudoku_grid, starting):
@@ -114,48 +111,21 @@ def Backtrack(sudoku_grid, starting):
 
 
 def IsValid(sudoku_grid):
-	return AllRowsValid(sudoku_grid) and AllColumnsValid(sudoku_grid) and AllBoxesValid(sudoku_grid)
-
-
-def AllRowsValid(sudoku_grid):
-	for i in range(0, len(sudoku_grid), 9):
-		nums = []
-		for j in range(i, i + 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
-				return False
-			else:
-				nums.append(sudoku_grid[j])
-
-	return True
-
-
-def AllColumnsValid(sudoku_grid):
+	# Iterate through every row/column/subgrid at once
 	for i in range(9):
-		nums = []
-		for j in range(i, len(sudoku_grid), 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
+		# Iterate through all the values each row/column/subgrid MUST contain
+		for j in range(1, 10):
+			# Make sure all columns only contain 1-9
+			if (not ColumnContainsNumber(sudoku_grid, i, j)):
 				return False
-			else:
-				nums.append(sudoku_grid[j])
+			# Make sure all rows only contain 1-9
+			if (not RowContainsNumber(sudoku_grid, i * 9, j)):
+				return False
+			# Make sure all subgrids only contain 1-9
+			if (not BoxContainsNumber(sudoku_grid, 10 + (i * 3), j)):
+				return False
 
-	return True
-
-
-def AllBoxesValid(sudoku_grid):
-
-	for box in range(9):
-		x = box % 3
-		y = box / 3
-
-		nums = []
-
-		for r in range(y * 3, (y + 1) * 3):
-			for c in range(x * 3, (x + 1) * 3):
-				if(sudoku_grid[(9 * r) + c] == 0 or sudoku_grid[(9 * r) + c] in nums):
-					return False
-				else:
-					nums.append(sudoku_grid[(9 * r) + c])
-
+	# If we get here then the grid is valid
 	return True
 
 
