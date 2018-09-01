@@ -15,19 +15,19 @@ from random import choice
 # 	0, 0, 5,    2, 0, 6,    3, 0, 0  \
 # "
 
-my_input = " \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-									 \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-									 \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0  \
-"
+# my_input = " \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 									 \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 									 \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0, \
+# 	0, 0, 0,    0, 0, 0,    0, 0, 0  \
+# "
 
 # my_input = " \
 # 	6, 3, 9,    5, 7, 4,    1, 8, 2, \
@@ -50,43 +50,46 @@ box_map = {
 
 
 def main():
-	sudoku_grid = GetMyInput(my_input)
+	sudoku_grid = GetMyInput("input.txt")
+	backup_sudoku = list(sudoku_grid)
 	res = Backtrack(sudoku_grid, 0)
 	if(res):
-		PrintSudokuGrid(sudoku_grid)
+		PrintSudokuGrid(sudoku_grid, backup_sudoku)
 	else:
 		print("no solution")
 
 
-def PrintSudokuGrid(sudoku_grid):
+def PrintSudokuGrid(sudoku_grid, backup_sudoku):
 	# I will document this later it makes me want to cry right now.
 	for i in range(9):
-		print("++++", end="")
-	print("+")
+		print(TextColors.BOLD + "++++" + TextColors.END, end="")
+	print(TextColors.BOLD + "+" + TextColors.END)
 	for i in range(9):
-		print("+", end="")
+		print(TextColors.BOLD + "+" + TextColors.END, end="")
 		for j in range(9):
-			print(" " + str(sudoku_grid[(i * 9) + j]) + " ", end="")
+			print(" ", end="")
+			if(backup_sudoku[(i * 9) + j] != 0):
+				print(TextColors.WHITE, end="")
+			else:
+				print(TextColors.BLUE, end="")
+			print(str(sudoku_grid[(i * 9) + j]) + TextColors.END + " ", end="")
 			if(j % 3 == 2):
-				print("+", end="")
+				print(TextColors.BOLD + "+" + TextColors.END, end="")
 			else:
 				print("|", end="")
 		print()
 		if(i % 3 == 2):
 			for j in range(9):
-				print("++++", end="")
-			print("+")
+				print(TextColors.BOLD + "++++" + TextColors.END, end="")
+			print(TextColors.BOLD + "+" + TextColors.END)
 		else:
 			for j in range(9):
 				if(j % 3 == 0):
-					print("+", end="")
+					print(TextColors.BOLD + "+" + TextColors.END, end="")
 				else:
 					print("-", end="")
 				print("---", end="")
-			if(i % 3 == 0):
-				print("+")
-			else:
-				print("-")
+			print(TextColors.BOLD + "+" + TextColors.END)
 
 
 def Backtrack(sudoku_grid, starting):
@@ -114,48 +117,21 @@ def Backtrack(sudoku_grid, starting):
 
 
 def IsValid(sudoku_grid):
-	return AllRowsValid(sudoku_grid) and AllColumnsValid(sudoku_grid) and AllBoxesValid(sudoku_grid)
-
-
-def AllRowsValid(sudoku_grid):
-	for i in range(0, len(sudoku_grid), 9):
-		nums = []
-		for j in range(i, i + 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
-				return False
-			else:
-				nums.append(sudoku_grid[j])
-
-	return True
-
-
-def AllColumnsValid(sudoku_grid):
+	# Iterate through every row/column/subgrid at once
 	for i in range(9):
-		nums = []
-		for j in range(i, len(sudoku_grid), 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
+		# Iterate through all the values each row/column/subgrid MUST contain
+		for j in range(1, 10):
+			# Make sure all columns only contain 1-9
+			if (not ColumnContainsNumber(sudoku_grid, i, j)):
 				return False
-			else:
-				nums.append(sudoku_grid[j])
+			# Make sure all rows only contain 1-9
+			if (not RowContainsNumber(sudoku_grid, i * 9, j)):
+				return False
+			# Make sure all subgrids only contain 1-9
+			if (not BoxContainsNumber(sudoku_grid, 10 + (i * 3), j)):
+				return False
 
-	return True
-
-
-def AllBoxesValid(sudoku_grid):
-
-	for box in range(9):
-		x = box % 3
-		y = box / 3
-
-		nums = []
-
-		for r in range(y * 3, (y + 1) * 3):
-			for c in range(x * 3, (x + 1) * 3):
-				if(sudoku_grid[(9 * r) + c] == 0 or sudoku_grid[(9 * r) + c] in nums):
-					return False
-				else:
-					nums.append(sudoku_grid[(9 * r) + c])
-
+	# If we get here then the grid is valid
 	return True
 
 
@@ -210,10 +186,20 @@ def GetBoxFromPos(pos):
 
 
 def GetMyInput(sudoku_input):
-	return map(int, sudoku_input.replace('\t', '').replace(',', '').split())
+	with open(sudoku_input) as fp:
+		input_str = fp.read()
+	return map(int, input_str.replace('\t', '').replace(',', '').split())
 
 
-
+class TextColors:
+	WHITE = '\033[37m'
+	PINK = '\033[95m'
+	BLUE = '\033[94m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	BOLD = '\033[1m'
+	END = '\033[0m'
 
 
 
