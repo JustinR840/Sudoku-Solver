@@ -1,6 +1,7 @@
 from __future__ import print_function
 from random import choice
 
+
 my_input = " \
   	3, 0, 6,    5, 0, 8,    4, 0, 0, \
   	5, 2, 0,    0, 0, 0,    0, 0, 0, \
@@ -14,83 +15,57 @@ my_input = " \
   	0, 0, 0,    0, 0, 0,    0, 7, 4, \
   	0, 0, 5,    2, 0, 6,    3, 0, 0  \
   "
-
-"""
-my_input = " \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-									 \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-									 \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0, \
-	0, 0, 0,    0, 0, 0,    0, 0, 0  \
-"
-"""
-
-# my_input = " \
-# 	6, 3, 9,    5, 7, 4,    1, 8, 2, \
-# 	5, 4, 1,    8, 2, 9,    3, 7, 6, \
-# 	7, 8, 2,    6, 1, 3,    9, 5, 4, \
-# 									 \
-# 	1, 9, 8,    4, 6, 7,    5, 2, 3, \
-# 	3, 6, 5,    9, 8, 2,    4, 1, 7, \
-# 	4, 2, 7,    1, 3, 5,    8, 6, 9, \
-# 									 \
-# 	9, 5, 6,    7, 4, 8,    2, 3, 1, \
-# 	8, 1, 3,    2, 9, 6,    7, 4, 5, \
-# 	2, 7, 4,    3, 5, 1,    6, 9, 8  \
-# "
 box_map = {
 	(0, 0): 0, (1, 0): 1, (2, 0): 2,
 	(0, 1): 3, (1, 1): 4, (2, 1): 5,
 	(0, 2): 6, (1, 2): 7, (2, 2): 8
 }
 
-
+# Gets the sudoku from a file and completes it
 def main():
-	sudoku_grid = GetMyInput(my_input)
+	sudoku_grid = GetMyInput("input.txt")
+	backup_sudoku = list(sudoku_grid)
 	res = Backtrack(sudoku_grid, 0)
 	if(res):
-		PrintSudokuGrid(sudoku_grid)
+		PrintSudokuGrid(sudoku_grid, backup_sudoku)
 	else:
 		print("no solution")
 
 
-def PrintSudokuGrid(sudoku_grid):
-	# Prints the top border
+	
+# Prints the top border
+def PrintSudokuGrid(sudoku_grid, backup_sudoku):
 	for i in range(9):
-		print("++++", end="")
-	print("+")
+		print(TextColors.BOLD + "++++" + TextColors.END, end="")
+	print(TextColors.BOLD + "+" + TextColors.END)
 	for i in range(9):
-		print("+", end="")
+		print(TextColors.BOLD + "+" + TextColors.END, end="")
 		for j in range(9):
-			print(" " + str(sudoku_grid[(i * 9) + j]) + " ", end="")
+			print(" ", end="")
+			if(backup_sudoku[(i * 9) + j] != 0):
+				print(TextColors.WHITE, end="")
+			else:
+				print(TextColors.BLUE, end="")
+			print(str(sudoku_grid[(i * 9) + j]) + TextColors.END + " ", end="")
 			if(j % 3 == 2):
-				print("+", end="")
+				print(TextColors.BOLD + "+" + TextColors.END, end="")
 			else:
 				print("|", end="")
 		print()
 		if(i % 3 == 2):
 			for j in range(9):
-				print("++++", end="")
-			print("+")
+				print(TextColors.BOLD + "++++" + TextColors.END, end="")
+			print(TextColors.BOLD + "+" + TextColors.END)
 		else:
 			for j in range(9):
 				if(j % 3 == 0):
-					print("+", end="")
+					print(TextColors.BOLD + "+" + TextColors.END, end="")
 				else:
 					print("-", end="")
 				print("---", end="")
-			if(i % 3 == 0):
-				print("+")
-			else:
-				print("-")
+			print(TextColors.BOLD + "+" + TextColors.END)
 
-
+# Performs the backtracking function to find the sudoku solution
 def Backtrack(sudoku_grid, starting):
 	if(IsValid(sudoku_grid)):
 		return True
@@ -114,53 +89,26 @@ def Backtrack(sudoku_grid, starting):
 			sudoku_grid[i] = 0
 			return False
 
-
+# Checks if a sudoku is valid
 def IsValid(sudoku_grid):
-	return AllRowsValid(sudoku_grid) and AllColumnsValid(sudoku_grid) and AllBoxesValid(sudoku_grid)
-
-
-def AllRowsValid(sudoku_grid):
-	for i in range(0, len(sudoku_grid), 9):
-		nums = []
-		for j in range(i, i + 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
-				return False
-			else:
-				nums.append(sudoku_grid[j])
-
-	return True
-
-
-def AllColumnsValid(sudoku_grid):
+	# Iterate through every row/column/subgrid at once
 	for i in range(9):
-		nums = []
-		for j in range(i, len(sudoku_grid), 9):
-			if(sudoku_grid[j] == 0 or sudoku_grid[j] in nums):
+		# Iterate through all the values each row/column/subgrid MUST contain
+		for j in range(1, 10):
+			# Make sure all columns only contain 1-9
+			if (not ColumnContainsNumber(sudoku_grid, i, j)):
 				return False
-			else:
-				nums.append(sudoku_grid[j])
+			# Make sure all rows only contain 1-9
+			if (not RowContainsNumber(sudoku_grid, i * 9, j)):
+				return False
+			# Make sure all subgrids only contain 1-9
+			if (not BoxContainsNumber(sudoku_grid, 10 + (i * 3), j)):
+				return False
 
+	# If we get here then the grid is valid
 	return True
 
-
-def AllBoxesValid(sudoku_grid):
-
-	for box in range(9):
-		x = box % 3
-		y = box / 3
-
-		nums = []
-
-		for r in range(y * 3, (y + 1) * 3):
-			for c in range(x * 3, (x + 1) * 3):
-				if(sudoku_grid[(9 * r) + c] == 0 or sudoku_grid[(9 * r) + c] in nums):
-					return False
-				else:
-					nums.append(sudoku_grid[(9 * r) + c])
-
-	return True
-
-
+# Gets which inputs can be used in a particular cell
 def GetPossibleInputsForPos(sudoku_grid, pos):
 	possible_inputs = []
 	for num in range(1, 10):
@@ -169,10 +117,13 @@ def GetPossibleInputsForPos(sudoku_grid, pos):
 
 	return possible_inputs
 
+# Checks whether the given number can be placed here
 def CanPlaceNumberHere(sudoku_grid, pos, num):
-	return not (ColumnContainsNumber(sudoku_grid, pos, num) or RowContainsNumber(sudoku_grid, pos, num) or BoxContainsNumber(sudoku_grid, pos, num))
+	return not (ColumnContainsNumber(sudoku_grid, pos, num) 
+		or RowContainsNumber(sudoku_grid, pos, num) 
+		or BoxContainsNumber(sudoku_grid, pos, num))
 
-
+# Checks if a column contains a particular number we are looking for
 def ColumnContainsNumber(sudoku_grid, pos, num):
 	for i in range(pos % 9, len(sudoku_grid), 9):
 		if(sudoku_grid[i] == num):
@@ -180,7 +131,7 @@ def ColumnContainsNumber(sudoku_grid, pos, num):
 
 	return False
 
-
+# Checks if a row contains a particular number we are looking for
 def RowContainsNumber(sudoku_grid, pos, num):
 	for i in range((pos / 9) * 9, ((pos / 9) * 9) + 9):
 		if(sudoku_grid[i] == num):
@@ -188,7 +139,7 @@ def RowContainsNumber(sudoku_grid, pos, num):
 
 	return False
 
-
+# Checks if a row contains a particular number we are looking for
 def BoxContainsNumber(sudoku_grid, pos, num):
 	box = GetBoxFromPos(pos)
 
@@ -202,7 +153,7 @@ def BoxContainsNumber(sudoku_grid, pos, num):
 
 	return False
 
-
+# Returns which bow we are currently in
 def GetBoxFromPos(pos):
 	row = (pos / 9) / 3
 	col = (pos % 9) / 3
@@ -210,13 +161,22 @@ def GetBoxFromPos(pos):
 
 	return res
 
-
 def GetMyInput(sudoku_input):
-	return map(int, sudoku_input.replace('\t', '').replace(',', '').split())
+	with open(sudoku_input) as fp:
+		input_str = fp.read()
+	return map(int, input_str.replace('\t', '').replace(',', '').split())
 
 
+class TextColors:
+	WHITE = '\033[37m'
+	PINK = '\033[95m'
+	BLUE = '\033[94m'
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RED = '\033[91m'
+	BOLD = '\033[1m'
+	END = '\033[0m'
 
 
-
-
+# Runs the whole sudoku solving function
 main()
